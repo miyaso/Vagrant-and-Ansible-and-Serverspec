@@ -18,15 +18,15 @@ Vagrant.configure(2) do |config|
     db.vm.hostname = "db-server"
     db.vm.synced_folder ".", "/vagrant"
   end
-  #config.vm.provision :shell, :path => "ansible-local.sh"
-  #config.vm.provision :ansible do |ansible|
-  #  ansible.playbook = "ansible/site.yml"
-  #  ansible.inventory_path = "ansible/hosts"
-  #  ansible.limit = 'all'
-  #end
-  config.vm.provision :serverspec do |spec|
-    spec.pattern = "spec/db/*_spec.rb"
+  config.vm.provision :shell, :path => "ansible-local.sh"
+  config.vm.provision :ansible do |ansible|
+    ansible.playbook = "ansible/site.yml"
+    ansible.inventory_path = "ansible/hosts"
+    ansible.limit = 'all'
   end
+  #config.vm.provision :serverspec do |spec|
+  #  spec.pattern = "spec/db/*_spec.rb"
+  #end
   #config.vm.provision "shell", inline: <<-SHELL
   #  sudo yum install -y ansible1.9
   #SHELL

@@ -1,0 +1,48 @@
+- name: Yum update packages
+  yum: name=* state=latest
+
+- name: yum_install_packages
+  yum: name={{ item }} state=installed
+  with_items:
+    - vim
+    - wget
+    - tree
+    - git
+    - MySQL-python
+
+- name: add repo
+  command: rpm -ih http://dev.mysql.com/get/mysql57-community-release-el6-8.noarch.rpm creates=/etc/yum.repos.d/mysql-community.repo
+
+- name: install mysql-community-server
+  yum: name=mysql-community-server state=installed
+
+- name: service start mysql
+  service: name=mysqld enabled=yes state=started
+
+- name: first root password
+  shell: cat /var/log/mysqld.log | grep password | awk '{ print $NF }' | head -n 1
+  register: mysql_passwd
+
+- name: setup mysql root
+  command: mysqladmin -u root -p'{{mysql_passwd.stdout}}' password '{{mysql_root_passwd}}'
+  register: change_passwd 
+  when: mysql_passwd.stdout != ''
+  ignore_errors: True
+
+- name: check mysql root password
+  command: mysqlshow -u root -p'{{mysql_root_passwd}}'
+  register: root_check
+ 
+- name: create .my.cnf
+  template: src=.my.cnf dest=/root/.my.cnf owner=root mode=0600
+  become: yes
+  
+
+- name: Add deploy DB user and allow access to news_* databases
+  mysql_user: name={{dbuser}} password={{dbpasswd}} host="%" priv=*.*:ALL state=present
+
+- name: copy create_database.sql
+  copy: src=create_database.sql dest=/tmp owner=root mode=0755
+- name: Imports file.sql similiar to mysql -u <username> -p <password> < hostname.sql
+  mysql_db: state=import name=all target=/tmp/create_database.sql
+

@@ -1,0 +1,10 @@
+- name: deploy MySQL and configure the databases
+  hosts : db-servers
+  user  : root
+  become: yes
+  vars_files:
+    - vars/secret.yml
+  roles:
+    - common
+    - db
+
